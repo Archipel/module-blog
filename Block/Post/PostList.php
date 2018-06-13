@@ -2,11 +2,13 @@
 
 namespace Mirasvit\Blog\Block\Post;
 
+use Magento\Cms\Model\Template\FilterProvider;
 use Magento\Framework\DataObject\IdentityInterface;
 use Mirasvit\Blog\Model\Config;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Framework\Registry;
 use Mirasvit\Blog\Model\ResourceModel\Post\CollectionFactory as PostCollectionFactory;
+use Mirasvit\Blog\Model\Post;
 
 class PostList extends AbstractBlock implements IdentityInterface
 {
@@ -26,6 +28,11 @@ class PostList extends AbstractBlock implements IdentityInterface
     protected $collection;
 
     /**
+     * @var FilterProvider
+     */
+    protected $filterProvider;
+
+    /**
      * @param PostCollectionFactory $postCollectionFactory
      * @param Config                $config
      * @param Registry              $registry
@@ -34,16 +41,19 @@ class PostList extends AbstractBlock implements IdentityInterface
     public function __construct(
         PostCollectionFactory $postCollectionFactory,
         Config $config,
+        FilterProvider $filterProvider,
         Registry $registry,
         Context $context
     ) {
         $this->postCollectionFactory = $postCollectionFactory;
+        $this->filterProvider = $filterProvider;
 
         parent::__construct($config, $registry, $context);
     }
 
     /**
      * @return $this
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     protected function _beforeToHtml()
     {
@@ -81,6 +91,7 @@ class PostList extends AbstractBlock implements IdentityInterface
 
     /**
      * @return PostList\Toolbar
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function getToolbarBlock()
     {
@@ -224,11 +235,22 @@ class PostList extends AbstractBlock implements IdentityInterface
     }
 
     /**
-     * @param \Mirasvit\Blog\Model\Post $post
+     * @param Post $post
      * @return string
      */
-    public function getFeaturedAlt($post)
+    public function getFeaturedAlt(Post $post)
     {
         return $post->getFeaturedAlt() ?: $post->getName();
+    }
+
+    /**
+     * @param Post $post
+     * @return string
+     * @throws \Exception
+     */
+    public function getPostShortContent(Post $post){
+        return $this->filterProvider->getPageFilter()->filter(
+            $post->getShortContent()
+        );
     }
 }
